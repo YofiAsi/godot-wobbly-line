@@ -59,6 +59,7 @@ var _body: WobbleBody
 func _ready() -> void:
 	if not resized.is_connected(_on_resized):
 		resized.connect(_on_resized)
+	set_notify_transform(true)              # keep the clip outline overlay aligned
 	_ensure_style()
 	_ensure_body().ready()
 	if auto_play:
@@ -82,6 +83,8 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_ensure_body().mark_geometry_dirty()
 		queue_redraw()
+	elif what == NOTIFICATION_TRANSFORM_CHANGED and _body != null:
+		_body.sync_overlay_transform()      # the overlay is top_level: move it with us
 
 
 func _on_resized() -> void:
