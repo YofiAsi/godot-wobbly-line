@@ -1,8 +1,9 @@
 # Wobbly Shapes — Godot 4.6 addon
 
 Hand-drawn, animation-ready "wobbly" outlines for both UI (`Control`) and the
-2D world (`Node2D`). One shared geometry core, a serializable look resource,
-thin wrapper nodes, and live 2D editor handles.
+2D world (`Node2D`). One shared geometry core, a serializable look resource, a
+small family of shape nodes, self-contained "boil" animation, and live 2D
+editor handles.
 
 This repo is a ready-to-open Godot 4.6 project. The addon itself lives in
 `addons/wobbly_shapes/` and can be dropped into any other project.
@@ -12,14 +13,14 @@ This repo is a ready-to-open Godot 4.6 project. The addon itself lives in
 1. Open the project in Godot 4.6 (the plugin is already enabled in
    `project.godot`).
 2. Run the project (`F5`) to see the demo scene with all primitives, plus the
-   slow "boil" animation that runs at runtime.
-3. In a scene, **Add Node → `WobbleControl`** (UI panels) or **`WobbleShape2D`**
-   (world shapes). Assign a **WobbleStyle** resource (one is auto-created) and
-   tune it in the inspector.
+   slow "boil" animation (the nodes drive it themselves via `auto_play`).
+3. In a scene, **Add Node →** one of `WobblePolygon`, `WobbleLine`,
+   `WobbleShape` (world shapes) or `WobbleControl` (UI panels). Assign a
+   **WobbleStyle** resource (one is auto-created) and tune it in the inspector.
 
 ## Architecture
 
-A one-core / thin-wrapper design (no per-shape subclassing):
+A shared geometry core, a shared component, and thin nodes:
 
 ```
 WobbleStyle (Resource, .tres)   authoring params; emit_changed() on every setter
@@ -27,17 +28,25 @@ WobblePath  (static)            primitive -> base PackedVector2Array
 WobbleCore  (static)            resample -> jitter(seed) -> Chaikin; open/closed aware
 WobbleState (RefCounted)        per-node amplitude cache + dirty flags
 WobbleDraw  (static)            one fill + one stroke call
+WobbleBody  (RefCounted)        shared component: style + state + boil + draw
    |                                   |
-WobbleShape2D (Node2D)          WobbleControl (Control)
-   points / ellipse / bezier        size + corner_radius
+WobbleItem (Node2D, base)       WobbleControl (Control)
+ ├ WobblePolygon  (closed)         size + corner_radius
+ ├ WobbleLine     (open/closed)  both hosts hold a WobbleBody and forward to it
+ └ WobbleShape    (rect/circle)
    |
-WobbleEditorPlugin              inspector widget + draggable vertex handles
+WobbleEditorPlugin              draggable / insert / delete vertex handles
 ```
+
+Each node owns the exported properties (style + the `playing` / `auto_play` /
+`animation_speed` / `wiggle_frequency` animation controls) and delegates the
+actual style wiring, caching, boil, and drawing to a `WobbleBody`, so the
+Node2D and Control hosts share one implementation without sharing a base class.
 
 ### The pipeline
 
-1. **Base path** from a `WobblePath` source (`rounded_rect`, `ellipse`,
-   `bezier` via `Curve2D.tessellate()`, or explicit polygon/polyline points).
+1. **Base path** from a `WobblePath` source (`rounded_rect`, `ellipse`, or
+   explicit polygon/polyline points).
 2. **Arc-length resample** to `K = round(frequency * perimeter / 100)` points.
    Closed paths wrap; open paths pin both endpoints.
 3. **Jitter**: push each point along its normal by a *stable* per-bump
@@ -61,39 +70,55 @@ WobbleEditorPlugin              inspector widget + draggable vertex handles
 
 ## Editor authoring
 
-- Select a `WobbleShape2D` set to **Polygon** or **Polyline**: white vertex
-  handles appear in the 2D viewport. Drag to reshape (one undo step per drag,
-  `Ctrl+Z` reverts).
-- The inspector shows a **🎲 Randomize Seed** button for both node types.
-- All nodes are `@tool`, so they preview live while editing.
+- Select a `WobblePolygon` or `WobbleLine`: white vertex handles appear in the
+  2D viewport, replicating the feel of Godot's native Line2D/Polygon2D editor —
+  - **drag** a handle to move a point,
+  - **click an edge** to insert a point and place it,
+  - on an open `WobbleLine`, **click near an end** to extend the line,
+  - **right-click** (or `Delete`) a handle to remove it.
+
+  Each gesture is one undo step (`Ctrl+Z` reverts).
+- All nodes are `@tool`, so they preview live — including the boil — while editing.
 
 ## Animation: the "boil"
 
-Call `reseed(new_seed)` on any wobble node each frame (≈8–12 fps) to re-roll
-amplitudes while keeping the bump count — the outline wobbles in place like
-hand-drawn animation. The demo's `demo_controller.gd` drives this at runtime.
+Every shape node and `WobbleControl` animates itself. In the inspector's
+**Animation** group:
 
-Step the seed by a **large** constant (the demo uses the golden-ratio constant
-`0x9E3779B9`), not by 1 — Godot's RNG has no avalanche effect, so consecutive
-seeds look nearly identical.
+| Property | Meaning |
+|---|---|
+| `playing` | run the boil now (previews live in the editor) |
+| `auto_play` | start playing automatically when the node enters the tree |
+| `animation_speed` | boil ticks per second |
+| `wiggle_frequency` | how much the outline shifts each tick (subtle drift ↔ jumpy) |
+
+Under the hood each node steps a deterministic seed and re-rolls its wobble
+amplitudes while keeping the bump count, so the outline wobbles in place like
+hand-drawn animation. The seed is stepped by a **large** constant (the
+golden-ratio constant `0x9E3779B9`), not by 1 — Godot's RNG has no avalanche
+effect, so consecutive seeds look nearly identical. `reseed(new_seed)` is still
+available for manual/external driving.
 
 ## Files
 
 ```
 addons/wobbly_shapes/
-├── plugin.cfg / plugin.gd          EditorPlugin: inspector + 2D handles
+├── plugin.cfg / plugin.gd          EditorPlugin: 2D vertex handles
 ├── core/
 │   ├── wobble_core.gd              static pipeline (resample/jitter/chaikin)
 │   ├── wobble_state.gd             per-node cache + dirty flags
+│   ├── wobble_body.gd              shared component: style + state + boil + draw
 │   ├── path_source.gd              primitive -> points (WobblePath)
 │   └── draw_helper.gd              fill + stroke (WobbleDraw)
 ├── resources/wobble_style.gd       WobbleStyle (serializable params)
 ├── nodes/
-│   ├── wobble_shape_2d.gd          WobbleShape2D (Node2D)
+│   ├── wobble_item.gd              WobbleItem (Node2D base)
+│   ├── wobble_polygon.gd           WobblePolygon (closed)
+│   ├── wobble_line.gd              WobbleLine (open / closed)
+│   ├── wobble_shape.gd             WobbleShape (rectangle / circle)
 │   └── wobble_control.gd           WobbleControl (Control)
 ├── editor/
-│   ├── wobble_inspector.gd         EditorInspectorPlugin
-│   └── handle_editor.gd            vertex hit-test / drag / undo
+│   └── handle_editor.gd            vertex hit-test / drag / insert / delete / undo
 └── icons/                          custom node + resource icons
 ```
 
