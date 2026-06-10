@@ -84,6 +84,7 @@ var _body: WobbleBody
 
 
 func _ready() -> void:
+	set_notify_transform(true)              # keep the clip outline overlay aligned
 	_ensure_style()
 	_ensure_body().ready()
 	if auto_play:
@@ -97,6 +98,13 @@ func _draw() -> void:
 
 func _process(delta: float) -> void:
 	_ensure_body().process(delta)
+
+
+## The clip outline overlay is top_level, so it must be repositioned by hand when
+## this node moves (see WobbleBody / _WobbleOutline).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSFORM_CHANGED and _body != null:
+		_body.sync_overlay_transform()
 
 
 ## Keep the `style` export non-null so it is visible, editable, and serialized
