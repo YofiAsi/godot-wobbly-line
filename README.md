@@ -15,9 +15,8 @@ This repo is a ready-to-open Godot 4.6 project. The addon itself lives in
 2. Run the project (`F5`) to see the demo scene with all primitives, plus the
    slow "boil" animation (the nodes drive it themselves via `auto_play`).
 3. In a scene, **Add Node →** one of `WobblePolygon`, `WobbleLine`,
-   `WobbleBezier`, `WobbleShape` (world shapes) or `WobbleControl` (UI panels).
-   Assign a **WobbleStyle** resource (one is auto-created) and tune it in the
-   inspector.
+   `WobbleShape` (world shapes) or `WobbleControl` (UI panels). Assign a
+   **WobbleStyle** resource (one is auto-created) and tune it in the inspector.
 
 ## Architecture
 
@@ -33,8 +32,7 @@ WobbleBody  (RefCounted)        shared component: style + state + boil + draw
    |                                   |
 WobbleItem (Node2D, base)       WobbleControl (Control)
  ├ WobblePolygon  (closed)         size + corner_radius
- ├ WobbleLine     (open/closed)
- ├ WobbleBezier   (Curve2D)     both hosts hold a WobbleBody and forward to it
+ ├ WobbleLine     (open/closed)  both hosts hold a WobbleBody and forward to it
  └ WobbleShape    (rect/circle)
    |
 WobbleEditorPlugin              draggable / insert / delete vertex handles
@@ -47,8 +45,8 @@ Node2D and Control hosts share one implementation without sharing a base class.
 
 ### The pipeline
 
-1. **Base path** from a `WobblePath` source (`rounded_rect`, `ellipse`,
-   `bezier` via `Curve2D.tessellate()`, or explicit polygon/polyline points).
+1. **Base path** from a `WobblePath` source (`rounded_rect`, `ellipse`, or
+   explicit polygon/polyline points).
 2. **Arc-length resample** to `K = round(frequency * perimeter / 100)` points.
    Closed paths wrap; open paths pin both endpoints.
 3. **Jitter**: push each point along its normal by a *stable* per-bump
@@ -117,7 +115,6 @@ addons/wobbly_shapes/
 │   ├── wobble_item.gd              WobbleItem (Node2D base)
 │   ├── wobble_polygon.gd           WobblePolygon (closed)
 │   ├── wobble_line.gd              WobbleLine (open / closed)
-│   ├── wobble_bezier.gd            WobbleBezier (Curve2D)
 │   ├── wobble_shape.gd             WobbleShape (rectangle / circle)
 │   └── wobble_control.gd           WobbleControl (Control)
 ├── editor/

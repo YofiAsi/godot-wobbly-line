@@ -3,8 +3,8 @@
 class_name WobbleItem
 extends Node2D
 
-## Base class for the 2D wobbly shapes (WobblePolygon, WobbleLine, WobbleBezier,
-## WobbleShape). A bare CanvasItem has no transform, so the base is a Node2D.
+## Base class for the 2D wobbly shapes (WobblePolygon, WobbleLine, WobbleShape).
+## A bare CanvasItem has no transform, so the base is a Node2D.
 ##
 ## This class is intentionally thin: it declares the shared exported properties
 ## (style + the boil animation controls) and delegates ALL behaviour to a

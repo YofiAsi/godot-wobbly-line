@@ -53,14 +53,6 @@ static func ellipse(center: Vector2, rx: float, ry: float, samples := 96) -> Pac
 	return pts
 
 
-## Bezier path via Godot's own adaptive flattening. Reuse Curve2D so we inherit
-## the engine's bezier data model and the Path2D in/out-handle metaphor.
-static func bezier(curve: Curve2D, max_stages := 5, tolerance_degrees := 4.0) -> PackedVector2Array:
-	if curve == null or curve.point_count < 2:
-		return PackedVector2Array()
-	return curve.tessellate(max_stages, tolerance_degrees)
-
-
 static func _append_arc(pts: PackedVector2Array, c: Vector2, r: float, a0: float, a1: float, seg: int) -> void:
 	for i in range(1, seg + 1):
 		var t := float(i) / float(seg)

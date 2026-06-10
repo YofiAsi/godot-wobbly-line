@@ -1,11 +1,9 @@
 [gd_scene format=3 uid="uid://qsrdt2dh01jr"]
 
-[ext_resource type="Script" uid="uid://cy2y3y6ig66nh" path="res://demo/demo_controller.gd" id="1"]
 [ext_resource type="Script" uid="uid://hbnuamh2y5we" path="res://addons/wobbly_shapes/nodes/wobble_control.gd" id="2"]
 [ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_polygon.gd" id="3"]
 [ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_line.gd" id="4"]
 [ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_shape.gd" id="5"]
-[ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_bezier.gd" id="6"]
 [ext_resource type="Script" uid="uid://bb1tqn5bomuib" path="res://addons/wobbly_shapes/resources/wobble_style.gd" id="3_fekqk"]
 
 [sub_resource type="Resource" id="Resource_25i5g"]
@@ -23,21 +21,7 @@ script = ExtResource("3_fekqk")
 [sub_resource type="Resource" id="Resource_jpf85"]
 script = ExtResource("3_fekqk")
 
-[sub_resource type="Curve2D" id="Curve2D_r5t1e"]
-_data = {
-"points": PackedVector2Array(0, 0, 40, -90, -110, 30, -60, 0, 60, 0, 0, -50, -40, -90, 0, 0, 110, 30)
-}
-point_count = 3
-
-[sub_resource type="Resource" id="Resource_oqy5u"]
-script = ExtResource("3_fekqk")
-frequency = 4.8
-wiggle = 15.8
-smoothen = 0.67
-stroke_width = 5.3
-
 [node name="WobbleDemo" type="Node2D" unique_id=646203213]
-script = ExtResource("1")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1552117709]
 
@@ -88,10 +72,3 @@ kind = 1
 radius = Vector2(95, 60)
 auto_play = true
 style = SubResource("Resource_jpf85")
-
-[node name="Bezier" type="Node2D" parent="Shapes" unique_id=1326833221]
-position = Vector2(680, 430)
-script = ExtResource("6")
-curve = SubResource("Curve2D_r5t1e")
-auto_play = true
-style = SubResource("Resource_oqy5u")
