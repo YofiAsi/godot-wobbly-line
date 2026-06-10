@@ -15,7 +15,11 @@ extends Control
 
 @export var style: WobbleStyle:
 	set(v):
-		_bind_style(v)
+		if style != null and style.changed.is_connected(_on_style_changed):
+			style.changed.disconnect(_on_style_changed)
+		style = v
+		if style != null and not style.changed.is_connected(_on_style_changed):
+			style.changed.connect(_on_style_changed)
 		_ensure_state().mark_pattern_dirty()
 		queue_redraw()
 
@@ -68,11 +72,7 @@ func _ensure_style() -> void:
 
 
 func _bind_style(s: WobbleStyle) -> void:
-	if style != null and style.changed.is_connected(_on_style_changed):
-		style.changed.disconnect(_on_style_changed)
 	style = s
-	if style != null and not style.changed.is_connected(_on_style_changed):
-		style.changed.connect(_on_style_changed)
 
 
 func _on_style_changed() -> void:
