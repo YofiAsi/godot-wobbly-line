@@ -1,0 +1,53 @@
+# Normalize line endings for cross-platform Godot development
+* text=auto eol=lf
+
+# Godot project and resources
+*.gd text eol=lf linguist-language=GDScript
+*.gdshader text eol=lf
+*.godot text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.import text eol=lf
+*.cfg text eol=lf
+*.uid text eol=lf
+
+# Scripts and docs
+*.cs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+*.csv text eol=lf
+
+# Vector icons (text-based; keep diffs readable in addon repos)
+*.svg text eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.bmp binary
+*.ico binary
+*.ogg binary
+*.wav binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.gltf binary
+*.glb binary
+*.blend binary
+*.fbx binary
+*.exr binary
+*.hdr binary
+*.res binary
+*.translation binary
+
+# Git metadata
+.gitattributes text eol=lf
+.gitignore text eol=lf

@@ -1,0 +1,49 @@
+# Godot 4+ editor and import cache
+.godot/
+.import/
+
+# Export and build output
+export/
+build/
+bin/
+*.exe
+*.x86_64
+*.pck
+*.zip
+
+# Export credentials (never commit secrets)
+export_credentials.cfg
+
+# Imported translations (generated from CSV)
+*.translation
+
+# Mono / C# (if the project adds C# later)
+.mono/
+data_*/
+mono_crash.*.json
+
+# IDE and editor
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Logs and temp files
+*.log
+*.tmp
+*~
+*.swp
+*.swo
+
+# Blender backups
+*.blend1
+*.blend@
