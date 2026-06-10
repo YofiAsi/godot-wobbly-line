@@ -60,19 +60,57 @@ func set_playing(v: bool) -> void:
 	_host.set_process(v)
 
 
-## Call from the host's _ready(): sync processing to the current play state.
+## Call from the host's _ready(): sync processing to the current play state, and
+## create the outline overlay up front (in the tree, before any _draw) so we never
+## touch the scene tree from inside _draw().
 ## (The host is responsible for ensuring its own `style` export is non-null.)
 func ready() -> void:
 	_host.set_process(playing)
+	_ensure_overlay()
 
 
 ## Call from the host's _draw(). `base` is the host-built base path; `closed`
 ## says whether it is a filled loop.
+##
+## When the host opts into Godot's own `clip_children = CLIP_CHILDREN_AND_DRAW`
+## on a closed shape, split the draw into two passes so children clip to the
+## wobbly silhouette with the outline kept crisp on top: the host draws only the
+## FILL (which doubles as the clip mask), and the STROKE is drawn last on an
+## unclipped top_level overlay (see _WobbleOutline). Any other clip mode falls
+## through to the normal single-pass fill+stroke.
 func draw(base: PackedVector2Array, closed: bool) -> void:
 	if style == null or base.size() < 2:
 		return
 	var pts := _state.get_geometry(base, closed, style)
-	WobbleDraw.draw_shape(_host, pts, closed, style)
+	if closed and _host.clip_children == CanvasItem.CLIP_CHILDREN_AND_DRAW:
+		WobbleDraw.draw_fill(_host, pts, closed, style)
+		if _overlay != null and is_instance_valid(_overlay):
+			_overlay.visible = true
+			sync_overlay_transform()
+			_overlay.set_outline(self, pts, closed)
+	else:
+		if _overlay != null and is_instance_valid(_overlay):
+			_overlay.visible = false
+		WobbleDraw.draw_shape(_host, pts, closed, style)
+
+
+## Draw the filled silhouette only. Exposed so the overlay path stays in one place.
+func draw_fill(ci: CanvasItem, pts: PackedVector2Array, closed: bool) -> void:
+	WobbleDraw.draw_fill(ci, pts, closed, style)
+
+
+## Draw the outline only. Called by the overlay node so it can render the stroke
+## on top of the host's clipped children.
+func draw_stroke(ci: CanvasItem, pts: PackedVector2Array, closed: bool) -> void:
+	WobbleDraw.draw_stroke(ci, pts, closed, style)
+
+
+## Keep the outline overlay aligned with the host when the host moves/rotates.
+## The host calls this from its transform-changed notification (the overlay is
+## top_level, so it doesn't inherit the host's transform automatically).
+func sync_overlay_transform() -> void:
+	if _overlay != null and is_instance_valid(_overlay):
+		_overlay.global_transform = _host.get_global_transform()
 
 
 ## Call from the host's _process(delta). Advances the boil at `animation_speed`
@@ -122,13 +160,27 @@ func notify_topology_changed() -> void:
 
 # --- Internal ----------------------------------------------------------------
 
+const _WobbleOutline := preload("res://addons/wobbly_shapes/nodes/_wobble_outline.gd")
+
 var _host: CanvasItem
 var style: WobbleStyle
 var _state := WobbleState.new()
 var _seed := 1
 var _accum := 0.0
+var _overlay: Node2D
 
 
 func _on_style_changed() -> void:
 	_state.mark_geometry_dirty()
 	_host.queue_redraw()
+
+
+## Lazily create the stroke overlay as an INTERNAL child: it is not serialized
+## into the user's scene, stays out of the editor tree, and renders after the
+## user's children (top_level then lifts it above them, outside the clip).
+func _ensure_overlay() -> Node2D:
+	if _overlay == null or not is_instance_valid(_overlay):
+		_overlay = _WobbleOutline.new()
+		_overlay.name = "_WobbleOutline"
+		_host.add_child(_overlay, false, Node.INTERNAL_MODE_BACK)
+	return _overlay
