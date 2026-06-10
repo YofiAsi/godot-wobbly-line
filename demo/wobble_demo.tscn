@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://qsrdt2dh01jr"]
 
 [ext_resource type="Script" uid="uid://hbnuamh2y5we" path="res://addons/wobbly_shapes/nodes/wobble_control.gd" id="2"]
-[ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_polygon.gd" id="3"]
-[ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_line.gd" id="4"]
-[ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_shape.gd" id="5"]
+[ext_resource type="Script" uid="uid://bqprydc6c1s2s" path="res://addons/wobbly_shapes/nodes/wobble_polygon.gd" id="3"]
 [ext_resource type="Script" uid="uid://bb1tqn5bomuib" path="res://addons/wobbly_shapes/resources/wobble_style.gd" id="3_fekqk"]
+[ext_resource type="Script" uid="uid://gabust4qdy0p" path="res://addons/wobbly_shapes/nodes/wobble_line.gd" id="4"]
+[ext_resource type="Script" uid="uid://cmlyqmh4l553n" path="res://addons/wobbly_shapes/nodes/wobble_shape.gd" id="5"]
 
 [sub_resource type="Resource" id="Resource_25i5g"]
 script = ExtResource("3_fekqk")
@@ -34,8 +34,9 @@ offset_right = 280.0
 offset_bottom = 220.0
 script = ExtResource("2")
 corner_radius = 26.0
-auto_play = true
 style = SubResource("Resource_25i5g")
+playing = true
+auto_play = true
 
 [node name="Panel2" type="Control" parent="UI" unique_id=2075969264]
 layout_mode = 3
@@ -46,8 +47,9 @@ offset_right = 540.0
 offset_bottom = 200.0
 script = ExtResource("2")
 corner_radius = 16.0
-auto_play = true
 style = SubResource("Resource_xj2en")
+playing = true
+auto_play = true
 
 [node name="Shapes" type="Node2D" parent="." unique_id=1218835264]
 
@@ -55,20 +57,23 @@ style = SubResource("Resource_xj2en")
 position = Vector2(160, 420)
 script = ExtResource("3")
 points = PackedVector2Array(0, -70, 66.6, -21.6, 41.1, 56.6, -41.1, 56.6, -66.6, -21.6)
-auto_play = true
 style = SubResource("Resource_hcp16")
+playing = true
+auto_play = true
 
 [node name="Line" type="Node2D" parent="Shapes" unique_id=1607567789]
 position = Vector2(430, 430)
 script = ExtResource("4")
 points = PackedVector2Array(-90, 40, -45, -40, 0, 40, 45, -40, 90, 40)
-auto_play = true
 style = SubResource("Resource_2rjjo")
+playing = true
+auto_play = true
 
 [node name="Ellipse" type="Node2D" parent="Shapes" unique_id=1380266015]
 position = Vector2(660, 180)
 script = ExtResource("5")
 kind = 1
 radius = Vector2(95, 60)
-auto_play = true
 style = SubResource("Resource_jpf85")
+playing = true
+auto_play = true
