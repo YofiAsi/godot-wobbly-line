@@ -114,11 +114,7 @@ func _ensure_state() -> WobbleState:
 
 func _ensure_style() -> void:
 	if style == null:
-		_bind_style(WobbleStyle.new())
-
-
-func _bind_style(s: WobbleStyle) -> void:
-	style = s
+		style = WobbleStyle.new()
 
 
 func _on_style_changed() -> void:
