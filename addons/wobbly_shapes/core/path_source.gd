@@ -9,7 +9,12 @@ extends RefCounted
 
 ## Rounded rectangle: straight edges + quarter-arc corners, as a closed ring.
 ## (Ported from the original WobblyRect prototype.)
-static func rounded_rect(size: Vector2, radius: float, seg_per_corner := 6) -> PackedVector2Array:
+##
+## By default the rect spans (0,0)..(size) with its origin at the top-left, which
+## is what a Control's rect space wants. Pass [code]centered[/code] = true to
+## offset the whole ring so its center sits on the local origin, which is what a
+## Node2D shape (WobbleShape) wants.
+static func rounded_rect(size: Vector2, radius: float, seg_per_corner := 6, centered := false) -> PackedVector2Array:
 	var w := size.x
 	var h := size.y
 	var r := clampf(radius, 0.0, minf(w, h) * 0.5)
@@ -27,6 +32,10 @@ static func rounded_rect(size: Vector2, radius: float, seg_per_corner := 6) -> P
 	_append_arc(pts, c_bl, r, PI / 2.0, PI, seg_per_corner)
 	pts.append(Vector2(0, r))                           # left edge
 	_append_arc(pts, c_tl, r, PI, 3.0 * PI / 2.0, seg_per_corner)
+	if centered:
+		var off := -size * 0.5
+		for i in pts.size():
+			pts[i] += off
 	return pts
 
 

@@ -5,40 +5,35 @@ extends EditorPlugin
 ##
 ## The node/resource types register themselves globally via `class_name` +
 ## `@icon`, so they appear in the Add Node dialog and in typed code even when
-## this plugin is disabled. This plugin only adds editor authoring: the
-## inspector convenience widget and the 2D viewport vertex handles.
+## this plugin is disabled. This plugin only adds editor authoring: the 2D
+## viewport vertex handles for the editable shapes (WobblePolygon / WobbleLine).
 
 const HandleEditor := preload("res://addons/wobbly_shapes/editor/handle_editor.gd")
-const WobbleInspector := preload("res://addons/wobbly_shapes/editor/wobble_inspector.gd")
 
-var _inspector: EditorInspectorPlugin
 var _handle_editor
-var _edited: WobbleShape2D = null
+var _edited: WobbleItem = null
 
 
 func _enter_tree() -> void:
-	_inspector = WobbleInspector.new()
-	add_inspector_plugin(_inspector)
 	_handle_editor = HandleEditor.new()
 
 
 func _exit_tree() -> void:
-	if _inspector != null:
-		remove_inspector_plugin(_inspector)
-		_inspector = null
 	_handle_editor = null
 	_edited = null
 
 
-# --- 2D canvas handle editing (WobbleShape2D vertices) ----------------------
+# --- 2D canvas handle editing (WobbleItem vertices) -------------------------
 
 func _handles(object: Object) -> bool:
 	# MUST return true for the edited type or the forward methods may not fire.
-	return object is WobbleShape2D
+	# Any WobbleItem that exposes editable points (polygon / line) qualifies.
+	var item := object as WobbleItem
+	return item != null and item.editable_points()
 
 
 func _edit(object: Object) -> void:
-	_edited = object as WobbleShape2D
+	_edited = object as WobbleItem
 
 
 func _make_visible(visible: bool) -> void:

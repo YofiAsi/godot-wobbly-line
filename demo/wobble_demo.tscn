@@ -2,7 +2,10 @@
 
 [ext_resource type="Script" uid="uid://cy2y3y6ig66nh" path="res://demo/demo_controller.gd" id="1"]
 [ext_resource type="Script" uid="uid://hbnuamh2y5we" path="res://addons/wobbly_shapes/nodes/wobble_control.gd" id="2"]
-[ext_resource type="Script" uid="uid://c00krdm1fpwjw" path="res://addons/wobbly_shapes/nodes/wobble_shape_2d.gd" id="3"]
+[ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_polygon.gd" id="3"]
+[ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_line.gd" id="4"]
+[ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_shape.gd" id="5"]
+[ext_resource type="Script" path="res://addons/wobbly_shapes/nodes/wobble_bezier.gd" id="6"]
 [ext_resource type="Script" uid="uid://bb1tqn5bomuib" path="res://addons/wobbly_shapes/resources/wobble_style.gd" id="3_fekqk"]
 
 [sub_resource type="Resource" id="Resource_25i5g"]
@@ -47,6 +50,7 @@ offset_right = 280.0
 offset_bottom = 220.0
 script = ExtResource("2")
 corner_radius = 26.0
+auto_play = true
 style = SubResource("Resource_25i5g")
 
 [node name="Panel2" type="Control" parent="UI" unique_id=2075969264]
@@ -58,6 +62,7 @@ offset_right = 540.0
 offset_bottom = 200.0
 script = ExtResource("2")
 corner_radius = 16.0
+auto_play = true
 style = SubResource("Resource_xj2en")
 
 [node name="Shapes" type="Node2D" parent="." unique_id=1218835264]
@@ -66,27 +71,27 @@ style = SubResource("Resource_xj2en")
 position = Vector2(160, 420)
 script = ExtResource("3")
 points = PackedVector2Array(0, -70, 66.6, -21.6, 41.1, 56.6, -41.1, 56.6, -66.6, -21.6)
+auto_play = true
 style = SubResource("Resource_hcp16")
 
-[node name="Polyline" type="Node2D" parent="Shapes" unique_id=1607567789]
+[node name="Line" type="Node2D" parent="Shapes" unique_id=1607567789]
 position = Vector2(430, 430)
-script = ExtResource("3")
-shape_type = 1
+script = ExtResource("4")
 points = PackedVector2Array(-90, 40, -45, -40, 0, 40, 45, -40, 90, 40)
+auto_play = true
 style = SubResource("Resource_2rjjo")
 
 [node name="Ellipse" type="Node2D" parent="Shapes" unique_id=1380266015]
 position = Vector2(660, 180)
-script = ExtResource("3")
-shape_type = 2
-points = PackedVector2Array(-50, -40, 50, -40, 0, 50)
-ellipse_radius = Vector2(95, 60)
+script = ExtResource("5")
+kind = 1
+radius = Vector2(95, 60)
+auto_play = true
 style = SubResource("Resource_jpf85")
 
 [node name="Bezier" type="Node2D" parent="Shapes" unique_id=1326833221]
 position = Vector2(680, 430)
-script = ExtResource("3")
-shape_type = 3
-points = PackedVector2Array(-50, -40, 50, -40, 0, 50)
+script = ExtResource("6")
 curve = SubResource("Curve2D_r5t1e")
+auto_play = true
 style = SubResource("Resource_oqy5u")
