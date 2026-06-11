@@ -11,6 +11,7 @@ extends RefCounted
 
 var amplitudes: PackedFloat32Array = PackedFloat32Array()
 var cache: PackedVector2Array = PackedVector2Array()
+var stroke_cache: PackedVector2Array = PackedVector2Array()   # cache + wrap point when closed
 
 var pattern_dirty := true        # topology changed -> re-roll amplitudes
 var geometry_dirty := true       # positions changed -> re-process only
@@ -50,6 +51,13 @@ func get_geometry(base: PackedVector2Array, closed: bool, style: WobbleStyle) ->
 
 	if geometry_dirty or cache.is_empty():
 		cache = WobbleCore.process(base, closed, amplitudes, style.wiggle, style.smoothen_passes())
+		# Build the stroke polyline once per rebuild, not on every draw (the
+		# stroke is drawn each frame, twice when the clip overlay is active).
+		if closed and not cache.is_empty():
+			stroke_cache = cache.duplicate()    # packed arrays share on assignment
+			stroke_cache.append(cache[0])       # close the loop
+		else:
+			stroke_cache = cache
 		geometry_dirty = false
 	return cache
 

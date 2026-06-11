@@ -47,14 +47,18 @@ Node2D and Control hosts share one implementation without sharing a base class.
 
 1. **Base path** from a `WobblePath` source (`rounded_rect`, `ellipse`, or
    explicit polygon/polyline points).
-2. **Arc-length resample** to `K = round(frequency * perimeter / 100)` points.
-   Closed paths wrap; open paths pin both endpoints.
+2. **Arc-length resample** to `K = round(frequency * perimeter / 100)` points
+   (capped at `MAX_BUMPS = 128`). Closed paths wrap; open paths pin both
+   endpoints.
 3. **Jitter**: push each point along its normal by a *stable* per-bump
    amplitude (`wiggle`). Amplitudes are rolled once per seed/frequency change,
    so resizing or dragging never re-rolls them — no twitch. Open-path endpoints
    are pinned (amplitude 0).
 4. **Chaikin** corner-cutting, `smoothen` (0–1) mapped to up to 5 passes.
-   Closed rings cut every edge; open polylines keep their endpoints.
+   Closed rings cut every edge; open polylines keep their endpoints. Each pass
+   doubles the point count, so passes stop early once the ring would exceed
+   `MAX_RENDER_POINTS = 512` (the renderer re-triangulates the filled ring on
+   every redraw, and that cost grows quadratically with point count).
 5. **Draw**: closed → filled polygon + closed antialiased stroke; open → stroke
    only.
 
@@ -121,6 +125,28 @@ addons/wobbly_shapes/
 │   └── handle_editor.gd            vertex hit-test / drag / insert / delete / undo
 └── icons/                          custom node + resource icons
 ```
+
+## Performance
+
+A wobbly shape is rebuilt (and its fill re-triangulated by the renderer) every
+frame that its geometry changes — i.e. while it resizes or boils. The pipeline
+caps itself (`WobbleCore.MAX_BUMPS` = 128 bumps, `MAX_RENDER_POINTS` = 512
+final vertices), which keeps a card-sized `WobbleControl`'s per-draw cost
+bounded even mid-tween (issue #8). Things the addon *cannot* cap:
+
+- **`clip_children`** forces backbuffer copies in Godot's 2D renderer — a
+  [known engine-wide cost](https://github.com/godotengine/godot/issues/79439)
+  that is especially heavy with the GL Compatibility renderer and on mobile.
+  Leave it off unless children really must be masked to the silhouette.
+- **`playing`** redraws the node `animation_speed` times per second even when
+  nothing else changes. Prefer modest speeds (the default 10/s is plenty) and
+  don't leave dozens of offscreen panels boiling.
+
+`demo/stress_test.tscn` is a worst-case benchmark scene: size-tweening panels
+(the issue #8 card pattern), clipped card-sized panels, and a field of moving,
+boiling shapes, with an FPS/frame-time readout. Run it with
+`godot demo/stress_test.tscn --quit-after 900 ++ --report` to write an
+avg/worst frame-time summary to `demo/_stress_report.txt`.
 
 ## Notes / caveats
 

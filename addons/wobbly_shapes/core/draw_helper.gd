@@ -11,9 +11,9 @@ extends RefCounted
 ## Note: draw_colored_polygon has no antialias argument, so fill AA relies on
 ## 2D MSAA (enabled in project.godot). draw_polyline does antialias the stroke.
 
-static func draw_shape(ci: CanvasItem, pts: PackedVector2Array, closed: bool, style: WobbleStyle) -> void:
+static func draw_shape(ci: CanvasItem, pts: PackedVector2Array, stroke_line: PackedVector2Array, closed: bool, style: WobbleStyle) -> void:
 	draw_fill(ci, pts, closed, style)
-	draw_stroke(ci, pts, closed, style)
+	draw_stroke(ci, stroke_line, style)
 
 
 ## The filled silhouette only (closed shapes). Used on its own as the clip mask
@@ -27,12 +27,11 @@ static func draw_fill(ci: CanvasItem, pts: PackedVector2Array, closed: bool, sty
 
 ## The hand-drawn outline only. Drawn last (on top) when clipping is active so the
 ## child content can't cover the inner edge of the stroke.
-static func draw_stroke(ci: CanvasItem, pts: PackedVector2Array, closed: bool, style: WobbleStyle) -> void:
-	if style == null or pts.size() < 2 or style.stroke_width <= 0.0:
+## `line` is the prebuilt polyline (already wrapped for closed shapes — see
+## WobbleState.stroke_cache); no per-draw copies here, this runs every frame.
+static func draw_stroke(ci: CanvasItem, line: PackedVector2Array, style: WobbleStyle) -> void:
+	if style == null or line.size() < 2 or style.stroke_width <= 0.0:
 		return
-	var line := pts.duplicate()
-	if closed:
-		line.append(pts[0])                     # close the loop
 	ci.draw_polyline(line, style.stroke_color, style.stroke_width, true)
 
 
