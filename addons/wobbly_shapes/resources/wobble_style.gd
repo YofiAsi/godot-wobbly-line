@@ -3,21 +3,20 @@
 class_name WobbleStyle
 extends Resource
 
-## Serializable authoring parameters for the hand-drawn look. Save as a .tres
-## and reuse one "look" across many shapes.
+## Optional, shareable override for the hand-drawn look. Every wobbly node owns
+## these same parameters natively; assigning a WobbleStyle to a node's `style`
+## slot makes this one "look" win over the node's own exports (Theme-style), so a
+## single .tres can drive many shapes. Leave the slot empty to use per-node values.
 ##
 ## Figma "Dynamic stroke" analogues:
 ##   FREQUENCY -> number of bumps per 100 px of perimeter (bump count).
 ##   WIGGLE    -> amplitude in px of perpendicular jitter at each bump.
 ##   SMOOTHEN  -> 0..1, how many Chaikin passes round off the jagged bumps
-##                (0 = faceted polygon, 1 = soft waves).
+##                (0 = faceted polygon, 1 = soft waves). The discrete pass count
+##                is derived in WobbleBody (which also owns the per-node smoothen).
 ##
 ## A custom Resource does NOT emit `changed` automatically for script
 ## properties, so every setter calls emit_changed() to drive live preview.
-
-## Maximum Chaikin passes at smoothen == 1.0. Convergence is essentially
-## complete by ~4-5 passes and point count grows geometrically per pass.
-const MAX_SMOOTHEN_PASSES := 5
 
 @export_range(0.5, 20.0, 0.1) var frequency := 4.0:
 	set(v):
@@ -53,8 +52,3 @@ const MAX_SMOOTHEN_PASSES := 5
 	set(v):
 		stroke_width = v
 		emit_changed()
-
-
-## Discrete Chaikin pass count derived from the continuous smoothen knob.
-func smoothen_passes() -> int:
-	return int(round(clampf(smoothen, 0.0, 1.0) * float(MAX_SMOOTHEN_PASSES)))
