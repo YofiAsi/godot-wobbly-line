@@ -87,11 +87,11 @@ func draw(base: PackedVector2Array, closed: bool) -> void:
 		if _overlay != null and is_instance_valid(_overlay):
 			_overlay.visible = true
 			sync_overlay_transform()
-			_overlay.set_outline(self, pts, closed)
+			_overlay.set_outline(self, _state.stroke_cache)
 	else:
 		if _overlay != null and is_instance_valid(_overlay):
 			_overlay.visible = false
-		WobbleDraw.draw_shape(_host, pts, closed, style)
+		WobbleDraw.draw_shape(_host, pts, _state.stroke_cache, closed, style)
 
 
 ## Draw the filled silhouette only. Exposed so the overlay path stays in one place.
@@ -100,9 +100,9 @@ func draw_fill(ci: CanvasItem, pts: PackedVector2Array, closed: bool) -> void:
 
 
 ## Draw the outline only. Called by the overlay node so it can render the stroke
-## on top of the host's clipped children.
-func draw_stroke(ci: CanvasItem, pts: PackedVector2Array, closed: bool) -> void:
-	WobbleDraw.draw_stroke(ci, pts, closed, style)
+## on top of the host's clipped children. `line` is the prebuilt stroke polyline.
+func draw_stroke(ci: CanvasItem, line: PackedVector2Array) -> void:
+	WobbleDraw.draw_stroke(ci, line, style)
 
 
 ## Keep the outline overlay aligned with the host when the host moves/rotates.

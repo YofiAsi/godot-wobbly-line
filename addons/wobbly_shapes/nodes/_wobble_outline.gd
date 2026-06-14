@@ -12,24 +12,23 @@ extends Node2D
 ## fill the host draws as the clip mask.
 
 var _body: WobbleBody
-var _pts := PackedVector2Array()
-var _closed := false
+var _line := PackedVector2Array()
 
 
 func _ready() -> void:
 	top_level = true
 
 
-## Push the latest geometry to draw. Called by WobbleBody on every host redraw,
-## so the outline tracks the fill mask even while the shape boils.
-func set_outline(body: WobbleBody, pts: PackedVector2Array, closed: bool) -> void:
+## Push the latest stroke polyline to draw (prebuilt, wrap point included for
+## closed shapes). Called by WobbleBody on every host redraw, so the outline
+## tracks the fill mask even while the shape boils.
+func set_outline(body: WobbleBody, line: PackedVector2Array) -> void:
 	_body = body
-	_pts = pts
-	_closed = closed
+	_line = line
 	queue_redraw()
 
 
 func _draw() -> void:
-	if _body == null or _pts.size() < 2:
+	if _body == null or _line.size() < 2:
 		return
-	_body.draw_stroke(self, _pts, _closed)
+	_body.draw_stroke(self, _line)
