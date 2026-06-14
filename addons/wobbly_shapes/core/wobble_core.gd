@@ -14,6 +14,16 @@ extends RefCounted
 ## Amplitudes are rolled ONCE per seed/frequency change (see WobbleState) and
 ## passed in here, so resizing/dragging never re-rolls them -> no twitch.
 
+## Hard cap on bumps: beyond this the wobble is invisible at screen scale, but
+## every downstream cost (smoothen, triangulation, AA stroke) keeps growing.
+const MAX_BUMPS := 128
+
+## Budget for the final ring handed to the renderer. draw_colored_polygon
+## ear-clip triangulates the concave ring on EVERY redraw (quadratic in point
+## count: 880 points cost ~1.3 ms per draw — see issue #8), so smoothen passes
+## stop once the next pass would overshoot this.
+const MAX_RENDER_POINTS := 512
+
 
 ## Total length of a polyline. When [code]closed[/code], the wrap segment
 ## (last -> first) is included.
@@ -34,7 +44,7 @@ static func perimeter(pts: PackedVector2Array, closed: bool) -> float:
 ## still read as "wobbly".
 static func point_count(perim: float, frequency: float, closed: bool) -> int:
 	var floor_k := 8 if closed else 3
-	return maxi(floor_k, int(round(frequency * perim / 100.0)))
+	return clampi(int(round(frequency * perim / 100.0)), floor_k, MAX_BUMPS)
 
 
 ## Roll one random amplitude in [-1, 1] per bump. Deterministic for a seed.
@@ -59,6 +69,8 @@ static func process(base: PackedVector2Array, closed: bool, amplitudes: PackedFl
 	var ring := resample(base, closed, k)
 	ring = jitter(ring, closed, amplitudes, wiggle)
 	for _i in smoothen_passes:
+		if ring.size() * 2 > MAX_RENDER_POINTS:
+			break                            # stay within the render budget
 		ring = chaikin(ring, closed)
 	return ring
 
@@ -76,10 +88,11 @@ static func resample(pts: PackedVector2Array, closed: bool, n: int) -> PackedVec
 	if closed:
 		src.append(pts[0])
 	var seg_lens := PackedFloat32Array()
+	seg_lens.resize(src.size() - 1)
 	var total := 0.0
 	for i in src.size() - 1:
 		var l := src[i].distance_to(src[i + 1])
-		seg_lens.append(l)
+		seg_lens[i] = l
 		total += l
 	if total <= 0.0:
 		return pts.duplicate()
@@ -141,15 +154,21 @@ static func chaikin(p: PackedVector2Array, closed: bool) -> PackedVector2Array:
 	var n := p.size()
 	if n < 3:
 		return p.duplicate()
+	# Both cases emit exactly 2n points (closed: 2 cuts per edge incl. wrap;
+	# open: 2 cuts per interior edge + the two pinned endpoints).
 	var out := PackedVector2Array()
+	out.resize(n * 2)
+	var j := 0
 	if not closed:
-		out.append(p[0])
+		out[0] = p[0]
+		j = 1
 	var limit := n if closed else n - 1
 	for i in limit:
 		var a := p[i]
 		var b := p[(i + 1) % n]
-		out.append(a.lerp(b, 0.25))
-		out.append(a.lerp(b, 0.75))
+		out[j] = a.lerp(b, 0.25)
+		out[j + 1] = a.lerp(b, 0.75)
+		j += 2
 	if not closed:
-		out.append(p[n - 1])
+		out[j] = p[n - 1]
 	return out
