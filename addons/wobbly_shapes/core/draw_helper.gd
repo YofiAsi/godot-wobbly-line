@@ -11,28 +11,28 @@ extends RefCounted
 ## Note: draw_colored_polygon has no antialias argument, so fill AA relies on
 ## 2D MSAA (enabled in project.godot). draw_polyline does antialias the stroke.
 
-static func draw_shape(ci: CanvasItem, pts: PackedVector2Array, stroke_line: PackedVector2Array, closed: bool, style: WobbleStyle) -> void:
-	draw_fill(ci, pts, closed, style)
-	draw_stroke(ci, stroke_line, style)
+static func draw_shape(ci: CanvasItem, pts: PackedVector2Array, stroke_line: PackedVector2Array, closed: bool, fill_color: Color, stroke_color: Color, stroke_width: float) -> void:
+	draw_fill(ci, pts, closed, fill_color)
+	draw_stroke(ci, stroke_line, stroke_color, stroke_width)
 
 
 ## The filled silhouette only (closed shapes). Used on its own as the clip mask
 ## when children are clipped to the shape (see WobbleBody).
-static func draw_fill(ci: CanvasItem, pts: PackedVector2Array, closed: bool, style: WobbleStyle) -> void:
-	if style == null or pts.size() < 3:
+static func draw_fill(ci: CanvasItem, pts: PackedVector2Array, closed: bool, fill_color: Color) -> void:
+	if pts.size() < 3:
 		return
 	if closed:
-		draw_colored_polygon_safe(ci, pts, style.fill_color)
+		draw_colored_polygon_safe(ci, pts, fill_color)
 
 
 ## The hand-drawn outline only. Drawn last (on top) when clipping is active so the
 ## child content can't cover the inner edge of the stroke.
 ## `line` is the prebuilt polyline (already wrapped for closed shapes — see
 ## WobbleState.stroke_cache); no per-draw copies here, this runs every frame.
-static func draw_stroke(ci: CanvasItem, line: PackedVector2Array, style: WobbleStyle) -> void:
-	if style == null or line.size() < 2 or style.stroke_width <= 0.0:
+static func draw_stroke(ci: CanvasItem, line: PackedVector2Array, stroke_color: Color, stroke_width: float) -> void:
+	if line.size() < 2 or stroke_width <= 0.0:
 		return
-	ci.draw_polyline(line, style.stroke_color, style.stroke_width, true)
+	ci.draw_polyline(line, stroke_color, stroke_width, true)
 
 
 static func draw_colored_polygon_safe(ci: CanvasItem, pts: PackedVector2Array, color: Color) -> void:
