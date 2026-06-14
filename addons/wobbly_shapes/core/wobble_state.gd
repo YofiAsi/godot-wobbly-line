@@ -33,24 +33,26 @@ func mark_geometry_dirty() -> void:
 
 
 ## Returns the cached wobbly geometry, rebuilding lazily. Re-rolls amplitudes
-## only when the pattern is dirty or the seed/frequency actually changed.
-func get_geometry(base: PackedVector2Array, closed: bool, style: WobbleStyle) -> PackedVector2Array:
-	if style == null or base.size() < 2:
+## only when the pattern is dirty or the seed/frequency actually changed. The
+## look params are passed as discrete (already-resolved) values by WobbleBody.
+func get_geometry(base: PackedVector2Array, closed: bool, seed: int, frequency: float,
+		wiggle: float, smoothen_passes: int) -> PackedVector2Array:
+	if base.size() < 2:
 		return PackedVector2Array()
 
-	var seed_changed := style.seed != _last_seed
-	var freq_changed := not is_equal_approx(style.frequency, _last_frequency)
+	var seed_changed := seed != _last_seed
+	var freq_changed := not is_equal_approx(frequency, _last_frequency)
 	if pattern_dirty or amplitudes.is_empty() or seed_changed or freq_changed:
 		var perim := WobbleCore.perimeter(base, closed)
-		_fixed_count = WobbleCore.point_count(perim, style.frequency, closed)
-		amplitudes = WobbleCore.roll_amplitudes(_fixed_count, style.seed)
-		_last_seed = style.seed
-		_last_frequency = style.frequency
+		_fixed_count = WobbleCore.point_count(perim, frequency, closed)
+		amplitudes = WobbleCore.roll_amplitudes(_fixed_count, seed)
+		_last_seed = seed
+		_last_frequency = frequency
 		pattern_dirty = false
 		geometry_dirty = true
 
 	if geometry_dirty or cache.is_empty():
-		cache = WobbleCore.process(base, closed, amplitudes, style.wiggle, style.smoothen_passes())
+		cache = WobbleCore.process(base, closed, amplitudes, wiggle, smoothen_passes)
 		# Build the stroke polyline once per rebuild, not on every draw (the
 		# stroke is drawn each frame, twice when the clip overlay is active).
 		if closed and not cache.is_empty():
