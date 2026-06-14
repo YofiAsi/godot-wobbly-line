@@ -87,7 +87,9 @@ func _ready() -> void:
 	set_notify_transform(true)              # keep the clip outline overlay aligned
 	_ensure_style()
 	_ensure_body().ready()
-	if auto_play:
+	# auto_play is a runtime behavior; in the editor the boil previews only when
+	# the user toggles `playing` themselves (issue #7).
+	if auto_play and not Engine.is_editor_hint():
 		playing = true
 
 
