@@ -29,6 +29,7 @@ WobbleCore  (static)            resample -> jitter(seed) -> Chaikin; open/closed
 WobbleState (RefCounted)        per-node amplitude cache + dirty flags
 WobbleDraw  (static)            one fill + one stroke call
 WobbleBody  (RefCounted)        shared component: style + state + boil + draw
+_WobbleOutline (Node2D)         internal top_level stroke overlay (clip mode only)
    |                                   |
 WobbleItem (Node2D, base)       WobbleControl (Control)
  ├ WobblePolygon  (closed)         size + corner_radius
@@ -84,6 +85,18 @@ Node2D and Control hosts share one implementation without sharing a base class.
   Each gesture is one undo step (`Ctrl+Z` reverts).
 - All nodes are `@tool`, so they preview live — including the boil — while editing.
 
+## Clipping children to the silhouette
+
+Set `clip_children = Clip Children And Draw` on a closed shape (`WobblePolygon`,
+`WobbleShape`, or a `WobbleControl` panel) and its child content is masked to the
+wobbly silhouette instead of a rectangle (issue #3). The body splits the draw
+into two passes so the hand-drawn outline stays crisp on top of the clipped
+children: the host draws only the **fill** (which doubles as the clip mask), and
+the **stroke** is rendered last on an internal, `top_level` `_WobbleOutline`
+overlay that lives outside the clip group. The overlay is an internal child — it
+is never serialized into your scene and tracks the host's transform automatically.
+Any other clip mode falls through to the normal single-pass fill + stroke.
+
 ## Animation: the "boil"
 
 Every shape node and `WobbleControl` animates itself. In the inspector's
@@ -120,7 +133,8 @@ addons/wobbly_shapes/
 │   ├── wobble_polygon.gd           WobblePolygon (closed)
 │   ├── wobble_line.gd              WobbleLine (open / closed)
 │   ├── wobble_shape.gd             WobbleShape (rectangle / circle)
-│   └── wobble_control.gd           WobbleControl (Control)
+│   ├── wobble_control.gd           WobbleControl (Control)
+│   └── _wobble_outline.gd          internal top_level stroke overlay (clip mode)
 ├── editor/
 │   └── handle_editor.gd            vertex hit-test / drag / insert / delete / undo
 └── icons/                          custom node + resource icons
@@ -134,8 +148,9 @@ caps itself (`WobbleCore.MAX_BUMPS` = 128 bumps, `MAX_RENDER_POINTS` = 512
 final vertices), which keeps a card-sized `WobbleControl`'s per-draw cost
 bounded even mid-tween (issue #8). Things the addon *cannot* cap:
 
-- **`clip_children`** forces backbuffer copies in Godot's 2D renderer — a
-  [known engine-wide cost](https://github.com/godotengine/godot/issues/79439)
+- **`clip_children`** (see "Clipping children to the silhouette" above) is fully
+  supported, but Godot's 2D renderer forces backbuffer copies for any clip group
+  — a [known engine-wide cost](https://github.com/godotengine/godot/issues/79439)
   that is especially heavy with the GL Compatibility renderer and on mobile.
   Leave it off unless children really must be masked to the silhouette.
 - **`playing`** redraws the node `animation_speed` times per second even when
