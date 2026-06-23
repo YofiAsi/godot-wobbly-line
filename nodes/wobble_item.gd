@@ -156,11 +156,14 @@ func _process(delta: float) -> void:
 	_ensure_body().process(delta)
 
 
-## The clip outline overlay is top_level, so it must be repositioned by hand when
-## this node moves (see WobbleBody / _WobbleOutline).
+## The clip outline overlay tracks this node by absolute transform, so it must be
+## repositioned by hand when this node moves, and freed when we leave the tree (it
+## may live under a clip ancestor rather than us — see WobbleBody / _WobbleOutline).
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSFORM_CHANGED and _body != null:
 		_body.sync_overlay_transform()
+	elif what == NOTIFICATION_EXIT_TREE and _body != null:
+		_body.teardown_overlay()
 
 
 ## Grey out the native look exports while a style override is active (the override
