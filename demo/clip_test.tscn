@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b1k6w0clip16t"]
+
+[ext_resource type="Script" path="res://demo/clip_test.gd" id="1"]
+
+[node name="ClipTest" type="Node2D"]
+script = ExtResource("1")

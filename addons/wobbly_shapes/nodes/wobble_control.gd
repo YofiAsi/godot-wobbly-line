@@ -141,7 +141,9 @@ func _notification(what: int) -> void:
 		_ensure_body().mark_geometry_dirty()
 		queue_redraw()
 	elif what == NOTIFICATION_TRANSFORM_CHANGED and _body != null:
-		_body.sync_overlay_transform()      # the overlay is top_level: move it with us
+		_body.sync_overlay_transform()      # the overlay tracks us by absolute transform
+	elif what == NOTIFICATION_EXIT_TREE and _body != null:
+		_body.teardown_overlay()            # overlay may live under a clip ancestor, not us
 
 
 func _on_resized() -> void:
